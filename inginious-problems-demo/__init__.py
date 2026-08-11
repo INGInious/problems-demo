@@ -5,7 +5,7 @@
 
 import os
 
-from flask import send_from_directory
+from flask import send_from_directory, render_template
 
 from inginious.common.tasks_problems import Problem
 from inginious.frontend.pages.utils import INGIniousPage
@@ -73,24 +73,23 @@ class DisplayableDemoProblem(DemoProblem, DisplayableProblem):
     def get_type_name(self, language):
         return "demo"
 
-    def show_input(self, template_helper, language, seed):
+    def show_input(self, language, seed):
         """ Show DemoProblem """
-        header = ParsableText(self.gettext(language, self._header), "rst",
-                              translation=self.get_translation_obj(language))
-        return template_helper.render("demo.html", template_folder=PATH_TO_TEMPLATES, inputId=self.get_id(), header=header)
+        header = ParsableText(self.gettext(language, self._header))
+        return render_template("demo-problem/demo.html", inputId=self.get_id(), header=header)
 
     @classmethod
-    def show_editbox(cls, template_helper, key, language):
-        return template_helper.render("demo_edit.html", template_folder=PATH_TO_TEMPLATES, key=key)
+    def show_editbox(cls, key, language):
+        return render_template("demo-problem/demo_edit.html", key=key)
 
     @classmethod
-    def show_editbox_templates(cls, template_helper, key, language):
+    def show_editbox_templates(cls, key, language):
         return ""
 
 
-def init(plugin_manager, course_factory, client, plugin_config):
+def init(plugin_manager,  client, plugin_config):
     # TODO: Replace by shared static middleware and let webserver serve the files
     plugin_manager.add_page('/plugins/demo/static/<path:path>', StaticMockPage.as_view("demoproblemstaticpage"))
     plugin_manager.add_hook("css", lambda: "/plugins/demo/static/demo.css")
     plugin_manager.add_hook("javascript_header", lambda: "/plugins/demo/static/demo.js")
-    course_factory.get_task_factory().add_problem_type(DisplayableDemoProblem)
+    plugin_manager.add_template_prefix("demo-problem", PATH_TO_TEMPLATES)
